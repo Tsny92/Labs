@@ -1,0 +1,28 @@
+AI Use Documentation - Lab 1: Peer Tutoring Hub
+
+AI Tool Used:
+ChatGPT (University Account)
+
+Example Prompts:
+1. "Help me complete the lap by walking me through how to complete all requirements in GitHub, programming, and debugging.  
+    I've only used GitHub once and not very in depth so I'm basically bran new to using it."
+2. "Help me to debug in GitHub over debugging in chatgpt."
+3. "Where is styles.css do we need to look at to fix the layout issue."
+
+How AI Helped:
+I used ChatGPT to help troubleshoot HTML and CSS, understand Bootstrap's responsive grid, and test the website on desktop and mobile. 
+ChatGPT helped me:
+    - identify conflicts between custom CSS and Bootstrap styling
+    - improve the layout of the tutoring request form
+    - and verify that the form submitted to the PHP confirmation page.
+
+Suggestion Rejected:
+On the home page ChatGPT initially insistended on working to reduce the image size.
+I rejected this response as I thought the image size worked will with the style and layout of the page.
+ChatGPT responded that it was wrong for instructing me to reduce the image size and agreed with my rejection to change it.
+
+Testing and Verification:
+After making changes suggested by ChatGPT, I saved the files and tested the website in my browser.
+I tested the homepage navigation, required form fields, and PHP confirmation message.
+I also tested all three pages using Chrome DevTools to check their desktop and mobile layouts.
+When something did not display correctly, I shared screenshots and code with ChatGPT to troubleshoot the issue.
