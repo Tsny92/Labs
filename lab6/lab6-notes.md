@@ -115,9 +115,38 @@ These statements clear the sample records from the temporary in-memory test data
 
 After rerunning the tests, all 14 checks passed. The tests verified request creation, duplicate-student handling, filtering, validation, editing, cancellation, foreign-key enforcement, and database integrity.
 
-**Final Result: PASS — All integration checks passed (14/14).**
+**Original Test Suite Result: PASS — All 14 integration checks passed.**
+
+**Final Test Suite Result: PASS — All 15 integration checks passed after adding the AI-recommended test in Part 6.**
+
+### Complete Integration Test Output
+
+After adding the AI-generated test in Part 6, I reran the complete integration test suite. The final output was:
+
+```text
+PASS UC01 create and Open
+PASS Lab 4 checkbox values preserved
+PASS Duplicate email reuses student
+PASS UC02 course and status filter
+PASS Invalid reason rejected
+PASS Invalid submission writes nothing
+PASS Edit Open request
+PASS Updated reason persisted
+PASS Cancel Open request
+PASS Cancelled row retained
+PASS Second cancellation rejected
+PASS Cancelled request cannot be edited
+PASS Unrelated request unchanged
+PASS FK enforced
+PASS UC02 empty filter result
+All integration checks passed
+```
+
+The terminal also displayed an Xdebug debugging-client connection warning before the test results. This did not prevent the integration tests from running successfully. All 15 checks passed.
 
 ## Part 6: AI Skills Pack
+
+The three AI Skills Pack activities below include the prompts, AI response summaries, and my evaluations against the actual application code. The appendix at the end of this document provides the expanded AI responses for all three activities.
 
 ### Activity 1: Application Builder
 
@@ -147,7 +176,7 @@ The AI traced the four primary requirements through the application layers and i
 
 | Requirement | Application Page | Service or Validation | Repository or SQL | Database Table | Test Evidence |
 |---|---|---|---|---|---|
-| Create request | `request-form.php`, `process-request.php` | `submitRequest()`, `validateSubmission()` | `insertStudentIfAbsent()`, `insertTutoringRequest()` | `students`, `tutoring_requests` | UC01 create and Open; duplicate email |
+| Student submits a tutoring request | `request-form.php`, `process-request.php` | `submitRequest()`, `validateSubmission()` | `insertStudentIfAbsent()`, `insertTutoringRequest()` | `students`, `tutoring_requests` | UC01 create and Open; duplicate email |
 | List/filter requests | Request listing page | Filter parameters | `listRequests()` | `students`, `tutoring_requests` | UC02 course and status filter; empty filter result |
 | Edit request | Request editing page | `reviseRequest()` | `updateOpenRequest()` | `tutoring_requests` | Edit Open request; updated reason persisted |
 | Cancel request | Request cancellation action | Open-status restriction | `cancelOpenRequest()` | `tutoring_requests` | Cancel Open request; cancelled row retained; second cancellation rejected |
@@ -229,3 +258,165 @@ The JOIN connects the `tutoring_requests` and `students` tables by matching `tut
 The results confirmed that both requests were stored correctly and that Alex Johnson's cancelled request remained in the database with a status of `Cancelled`.
 
 **Result: PASS — The SQL JOIN successfully retrieved the related student and tutoring request records.**
+
+
+## Appendix: Detailed AI Skills Pack Responses
+
+### Activity 1: Application Builder
+
+#### Prompt
+
+Explain how a tutoring request moves from php/request-form.php through PHP, PDO, and SQLite in this project. Identify the responsibility of each file.
+
+#### AI Response
+
+The Peer Tutoring Hub uses a layered architecture to process tutoring requests. Each layer has a specific responsibility, from collecting information in the browser to storing it in SQLite.
+
+**1. `php/request-form.php` — Collects information**
+
+This file displays the HTML form where students enter their name, email, course, tutoring needs, preferred date, topics, and preferred time. When the student submits the form, the information is sent to `process-request.php` using the HTTP POST method.
+
+**2. `php/process-request.php` — Handles the submission**
+
+This file receives the submitted information through `$_POST`. It verifies that the request uses POST and contains the expected form identifier. It calls `submitRequest(openDatabase(), $_POST)` and redirects the browser to the newly created request's details page after a successful submission.
+
+**3. `config/db.php` — Establishes the database connection**
+
+The `openDatabase()` function uses PDO (PHP Data Objects) to connect to `database/tutoring.db`. It configures database error handling, associative-array results, and SQLite foreign-key enforcement.
+
+**4. `services/requestService.php` — Validates and coordinates operations**
+
+The `submitRequest()` function calls `validateSubmission()` to check the submitted information. Once validation succeeds, the service starts a database transaction, ensures the student exists, retrieves the student's ID, and creates the tutoring request. If an operation fails, the transaction is rolled back.
+
+**5. `repositories/studentPDO.php` — Handles student records**
+
+This repository contains SQL statements for student-related operations. `insertStudentIfAbsent()` attempts to add a student without duplicating an existing email, while `findStudentByEmail()` retrieves the student's record and student ID.
+
+**6. `repositories/requestPDO.php` — Handles tutoring requests**
+
+This repository contains SQL statements to insert, retrieve, filter, update, and cancel tutoring requests. During a new submission, `insertTutoringRequest()` executes a parameterized SQL INSERT statement and returns the new request ID. Prepared statements help prevent SQL injection.
+
+**7. `database/setup-database.sql` — Defines the database structure**
+
+This file defines the `students` and `tutoring_requests` tables, including their primary keys, constraints, and foreign-key relationship. The `tutoring_requests.student_id` column references `students.student_id`.
+
+**8. `database/tutoring.db` — Stores the information**
+
+The SQLite database file stores student and tutoring-request records. Once the transaction commits, the new request is saved and can be retrieved for display.
+
+#### Example
+
+When Alex Johnson submitted his tutoring request, the form collected his information and sent it to `process-request.php`. The service validated the submission and used the PDO repositories to find or create his student record and insert the tutoring request. SQLite saved the request, and the application redirected to Request #2, displaying its information with an initial status of Open.
+
+#### Why the architecture matters
+
+Separating the application into layers makes the code easier to maintain, test, and troubleshoot. The form handles user input, the service manages business rules and transactions, and the repositories handle SQL operations. Validation, prepared statements, foreign-key constraints, and transactions support data integrity and security.
+
+---
+
+### Activity 2: Traceability Auditor
+
+#### Prompt
+
+Act as a Traceability Auditor for my IS 6465 Peer Tutoring Hub Lab 6 application. Create a traceability table showing how the requirements for creating, listing/filtering, editing, and cancelling tutoring requests are implemented. Use these columns: Requirement | Application Page | Service or Validation | Repository or SQL | Database Table | Test Evidence. Base your analysis on the PHP, PDO, SQLite, and integration test files we previously reviewed. Identify any gaps or limitations rather than assuming functionality exists.
+
+#### AI Response
+
+The Peer Tutoring Hub implements four primary request-management requirements. The following traceability matrix connects each requirement to its implementation and supporting test evidence.
+
+| Requirement | Application Page | Service or Validation | Repository or SQL | Database Table | Test Evidence |
+|---|---|---|---|---|---|
+| Student submits a tutoring request | `request-form.php`, `process-request.php` | `submitRequest()`, `validateSubmission()` | `insertStudentIfAbsent()`, `insertTutoringRequest()` | `students`, `tutoring_requests` | UC01 create and Open; duplicate email; invalid reason |
+| List and filter requests | Request listing page | Filter parameters | `listRequests()` | `students`, `tutoring_requests` | UC02 course and status filter; empty filter result |
+| Edit an Open request | Request editing page | `reviseRequest()` | `updateOpenRequest()` | `tutoring_requests` | Edit Open request; updated reason persisted |
+| Cancel an Open request | Request cancellation action | Open-status restriction | `cancelOpenRequest()` | `tutoring_requests` | Cancel Open request; cancelled row retained; second cancellation rejected |
+
+*The exact filenames for the listing, editing, and cancellation pages were not confirmed in the code excerpts used for the original AI audit.*
+
+#### Verification of Requirements
+
+**Create a tutoring request:** The `submitRequest()` function validates submitted information, starts a database transaction, finds or creates the student, and inserts the tutoring request. Integration tests verify Open status, duplicate-student handling, and invalid-reason rejection.
+
+**List and filter requests:** The `listRequests()` function retrieves tutoring requests using optional course and status filters. Integration tests confirm matching results and an empty result when no records match.
+
+**Edit an Open request:** The `reviseRequest()` service coordinates updates, while `updateOpenRequest()` restricts changes to requests with Open status. Tests confirm that edits succeed and updated information is persisted.
+
+**Cancel an Open request:** The `cancelOpenRequest()` function changes the status to Cancelled without deleting the record. Tests verify successful cancellation, record retention, and rejection of a second cancellation.
+
+#### Gaps and Limitations Identified
+
+1. The original audit did not verify exact filenames for all request-management pages.
+2. The integration tests did not cover every possible invalid input, such as malformed emails or invalid dates.
+3. The tests did not establish authentication or authorization controls.
+4. Integration tests used an in-memory SQLite database, so browser testing was also needed to verify behavior with the persistent database.
+
+#### Overall Assessment
+
+All four primary requirements have supporting implementation and test evidence. The application's separation of presentation, service, and repository responsibilities supports maintainability. PDO prepared statements, validation, transactions, foreign-key constraints, and status-restricted updates support reliable database operations.
+
+The original 14 passing integration tests provided evidence that the primary workflows worked, but did not establish exhaustive test coverage or confirm every possible security requirement.
+
+---
+
+### Activity 3: Test Harness Generator
+
+#### Prompt
+
+Act as a Test Harness Generator for my IS 6465 Peer Tutoring Hub Lab 6 application. Review the 14 passing integration tests in tests/integration-tests.php that we previously examined. Identify one meaningful behavior that the existing tests do not explicitly cover. Propose an additional PHP integration test using the application's existing PDO and SQLite functions. Explain what the test checks, why it matters, and what result should be expected. Do not assume the new test passes without executing it.
+
+#### AI Response
+
+The existing 14 integration tests covered request creation, duplicate-student handling, filtering, validation, editing, cancellation, foreign-key enforcement, and database integrity.
+
+However, the tests did not explicitly verify whether a cancelled tutoring request could be edited afterward. Although the existing suite confirmed that a cancelled request could not be cancelled again, it did not directly test whether an edit attempt would be rejected.
+
+#### Proposed Additional Integration Test
+
+The AI recommended adding this test to `tests/integration-tests.php` after the existing cancellation checks:
+
+```php
+$editCancelled = $sample;
+$editCancelled['reason'] = 'Attempt to edit a cancelled request.';
+
+check(
+    !reviseRequest($pdo, $id, $editCancelled),
+    'Cancelled request cannot be edited'
+);
+```
+
+#### What the Test Checks
+
+The test attempts to edit a tutoring request that has already been cancelled. It uses the existing `reviseRequest()` service function and checks whether the operation returns `false`, indicating that the update was rejected.
+
+#### Why the Test Matters
+
+Cancelled requests should remain unchanged to preserve accurate historical records. The `updateOpenRequest()` function in `repositories/requestPDO.php` restricts updates to requests with an Open status. This test provides additional evidence that the restriction is enforced through the application's service and repository layers.
+
+#### Expected Result
+
+If the application behaves as intended, the new test should report:
+
+```text
+PASS Cancelled request cannot be edited
+```
+
+The AI did not claim that the test had passed before execution.
+
+#### AI Evaluation
+
+The proposed test addressed a meaningful gap in the original integration test suite. It reused existing application functions, required no database schema changes, and operated on the temporary in-memory SQLite database.
+
+The AI also identified one possible improvement: checking the stored record after the rejected edit to confirm that its original contents remained unchanged.
+
+#### Actual Implementation and Verification
+
+After receiving the AI recommendation, I added the test to `tests/integration-tests.php` and executed the full integration test suite.
+
+The new test returned:
+
+```text
+PASS Cancelled request cannot be edited
+All integration checks passed
+```
+
+All 15 integration checks passed. The actual execution results confirmed that the AI-generated test was appropriate for this application.
