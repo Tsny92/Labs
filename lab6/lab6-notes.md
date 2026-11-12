@@ -15,7 +15,7 @@ I then opened the database using `sqlite3 database/tutoring.db` and executed the
 The output confirmed that both required tables exist:
 
 ```text
-students     tutoring_requests
+students     tutoring_requests
 ```
 
 **Result:** PASS – The SQLite database was successfully created, and both required tables were verified.
@@ -52,7 +52,6 @@ The application successfully saved the submission and redirected to the request 
 | 4. Edit an Open request | Edited Request #2, changing its course to IS 6495, description, and selected topics. | The existing request is updated without changing its ID. | Request #2 displayed the updated information, retained its ID, and remained Open. | Pass |
 | 5. Cancel an Open request | Cancelled Request #2 using the cancellation workflow. | Status changes to Cancelled while the record is retained. | Request #2 remained accessible with its information intact and status Cancelled. | Pass |
 | 6. Modify a cancelled request | Attempted to access the edit and cancellation pages for Request #2 directly using their URLs. | Editing and repeated cancellation are blocked. | The edit page displayed "Only Open requests may be edited." The cancellation page displayed "Only Open requests can be cancelled" and offered only a Keep request link. | Pass |
-
 
 ## Part 4: Application Workflow
 
@@ -146,7 +145,7 @@ The terminal also displayed an Xdebug debugging-client connection warning before
 
 ## Part 6: AI Skills Pack
 
-The three AI Skills Pack activities below include the prompts, AI response summaries, and my evaluations against the actual application code. The appendix at the end of this document provides the expanded AI responses for all three activities.
+The three activities below document the AI prompts I originally used, the responses, my evaluations, and the additional test I actually executed. These activities were completed before I received the instructor’s downloadable Skill instruction files. I subsequently compared the completed work with those files; that retrospective comparison is documented below. The appendix contains expanded, reformatted reconstructions of the original AI responses, not verbatim chat transcripts.
 
 ### Activity 1: Application Builder
 
@@ -189,6 +188,21 @@ I verified the AI's explanation of request cancellation against `repositories/re
 
 I agree with the AI's observation that passing all 14 integration tests does not guarantee every possible input has been tested. The traceability table helped me connect each application requirement to the code responsible for implementing it and the tests that verify its behavior.
 
+#### Supplementary Traceability Status Review
+
+The original six-column matrix above is retained to match the Lab 6 assignment. The instructor's downloadable auditor also distinguishes implementation evidence from executed verification. The following statuses refer only to the specific behaviors tested and documented in Parts 3 and 5; they are not a complete audit of every acceptance criterion.
+
+| Requirement area | Executed evidence | Status for documented behavior | Limitation |
+|---|---|---|---|
+| UC01 — Submit request | Browser test 1; `PASS UC01 create and Open`; duplicate-email and invalid-submission checks | Verified for tested cases | Not every possible invalid input was tested |
+| UC02 — View and filter | Browser tests 2–3; course/status filter and empty-result checks | Verified for tested cases | Full combinations and boundary cases not exhaustively checked |
+| UC01 — Edit Open request | Browser test 4; `PASS Edit Open request`; `PASS Updated reason persisted` | Verified for tested cases | Not all invalid edits or field combinations checked |
+| UC01 — Cancel Open request | Browser tests 5–6; cancellation, retained-row, second-cancellation, and cancelled-edit checks | Verified for tested cases | The added cancelled-edit test checks rejection, not a fresh post-attempt database read |
+
+The original materials available for this review do not establish formal requirement IDs for every individual acceptance criterion, so no additional IDs are invented here.
+
+---
+
 ### Activity 3: Test Harness Generator
 
 **Prompt:**
@@ -204,10 +218,9 @@ The AI proposed the following PHP test:
 ```php
 $editCancelled = $sample;
 $editCancelled['reason'] = 'Attempt to edit a cancelled request.';
-
 check(
-    !reviseRequest($pdo, $id, $editCancelled),
-    'Cancelled request cannot be edited'
+!reviseRequest($pdo, $id, $editCancelled),
+'Cancelled request cannot be edited'
 );
 ```
 
@@ -234,6 +247,20 @@ I verified the AI's recommendation by adding and executing the test rather than 
 
 Using AI during this lab helped me better understand how the different parts of the application work together. The Application Builder explained how information moves from the PHP form through the service and repository layers into SQLite, while the Traceability Auditor helped connect application requirements to the code and tests that support them. The Test Harness Generator was especially useful because it identified a missing test scenario that I was able to implement and verify, increasing the number of passing integration tests from 14 to 15. I also learned that AI-generated explanations and code should be checked against the actual application rather than assumed to be correct. Overall, these activities showed me how AI can help with understanding, testing, and improving an application while still requiring my own verification.
 
+### Follow-up Review Against the Instructor-Provided Skills
+
+After completing the original three AI activities, I reviewed the instructor's `application-builder.txt`, `traceability-auditor.txt`, and `test-harness-generator.txt` instructions. The comparison below describes alignment with the Skill Pack; it is a **retrospective documentation review**, not a claim that the supplied Skills were used during the original prompts or that additional tests were executed.
+
+| Instructor Skill | Existing Lab 6 evidence | Alignment and remaining limitation |
+|---|---|---|
+| Application Builder | Activity 1 explains the form → handler → service → repository → SQLite workflow, and Part 4 identifies the responsible files. | Supports the Skill's architecture and explanation goals. Activity 1 explained existing code; it did not generate a new feature or a complete changed-file implementation. |
+| Requirements Traceability Auditor | Activity 2 maps request creation, listing/filtering, editing, and cancellation to application layers and test evidence. | Covers the original Lab 6 six-column traceability requirement. The downloadable Skill also requests requirement IDs, explicit verification statuses, backward traceability, and prioritized findings; those were not all established by the original audit. |
+| Test Harness Generator | Activity 3 proposed a test rejecting edits to cancelled requests; I added it and ran the complete suite, with all 15 checks passing. | Demonstrates an executed, meaningful regression check. The downloadable Skill describes broader test matrices and additional boundary cases; the 15 checks should not be interpreted as exhaustive coverage. |
+
+**Verification status based on the evidence recorded in this lab:** The four primary workflows have executed browser-test evidence and relevant integration-test evidence. The new cancelled-edit restriction has a passing service-level integration check. These results support the tested behaviors, but do not prove that every input, security control, or edge case has been verified.
+
+**Known limitations and follow-up opportunities:** The original traceability audit did not establish every page filename or every acceptance-criterion ID. More thorough testing could include malformed email, invalid dates, combined-filter edge cases, and a database-state assertion after a rejected edit. Authentication, authorization, CSRF protection, and the separate User Management CRUD design are outside the completed Lab 6 scope; they should not be represented as implemented functionality. No application code, database schema, or test results were changed as part of this retrospective review.
+
 ## Part 7: SQL JOIN Query
 
 I executed a SQL JOIN query against the application's SQLite database using the following command:
@@ -258,7 +285,6 @@ The JOIN connects the `tutoring_requests` and `students` tables by matching `tut
 The results confirmed that both requests were stored correctly and that Alex Johnson's cancelled request remained in the database with a status of `Cancelled`.
 
 **Result: PASS — The SQL JOIN successfully retrieved the related student and tutoring request records.**
-
 
 ## Appendix: Detailed AI Skills Pack Responses
 
@@ -312,7 +338,7 @@ When Alex Johnson submitted his tutoring request, the form collected his informa
 
 Separating the application into layers makes the code easier to maintain, test, and troubleshoot. The form handles user input, the service manages business rules and transactions, and the repositories handle SQL operations. Validation, prepared statements, foreign-key constraints, and transactions support data integrity and security.
 
----
+**---**
 
 ### Activity 2: Traceability Auditor
 
@@ -331,7 +357,7 @@ The Peer Tutoring Hub implements four primary request-management requirements. T
 | Edit an Open request | Request editing page | `reviseRequest()` | `updateOpenRequest()` | `tutoring_requests` | Edit Open request; updated reason persisted |
 | Cancel an Open request | Request cancellation action | Open-status restriction | `cancelOpenRequest()` | `tutoring_requests` | Cancel Open request; cancelled row retained; second cancellation rejected |
 
-*The exact filenames for the listing, editing, and cancellation pages were not confirmed in the code excerpts used for the original AI audit.*
+**The exact filenames for the listing, editing, and cancellation pages were not confirmed in the code excerpts used for the original AI audit.**
 
 #### Verification of Requirements
 
@@ -346,8 +372,11 @@ The Peer Tutoring Hub implements four primary request-management requirements. T
 #### Gaps and Limitations Identified
 
 1. The original audit did not verify exact filenames for all request-management pages.
+
 2. The integration tests did not cover every possible invalid input, such as malformed emails or invalid dates.
+
 3. The tests did not establish authentication or authorization controls.
+
 4. Integration tests used an in-memory SQLite database, so browser testing was also needed to verify behavior with the persistent database.
 
 #### Overall Assessment
@@ -356,7 +385,7 @@ All four primary requirements have supporting implementation and test evidence. 
 
 The original 14 passing integration tests provided evidence that the primary workflows worked, but did not establish exhaustive test coverage or confirm every possible security requirement.
 
----
+**---**
 
 ### Activity 3: Test Harness Generator
 
@@ -377,10 +406,9 @@ The AI recommended adding this test to `tests/integration-tests.php` after the e
 ```php
 $editCancelled = $sample;
 $editCancelled['reason'] = 'Attempt to edit a cancelled request.';
-
 check(
-    !reviseRequest($pdo, $id, $editCancelled),
-    'Cancelled request cannot be edited'
+!reviseRequest($pdo, $id, $editCancelled),
+'Cancelled request cannot be edited'
 );
 ```
 
