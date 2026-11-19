@@ -8,7 +8,23 @@
 
 The generated package extends the Lab 6 presentation, application and data tiers with user pages, shared session protection, user services, prepared account queries and a database migration. See README.md for design decisions and traceability. Permanent deletion is blocked because the retention policy is unresolved.
 
-**Code example to inspect and verify:** `includes/auth.php`, `requireRole()` and `php/request-form.php`, which calls it with the Student role before any HTML output. Record your own verification here after inspecting the files.
+
+### Verified Code Example — Role-Based Access Control
+
+I reviewed `includes/auth.php` and `php/request-form.php` to verify how the generated application implements authentication and authorization.
+
+The `requireRole()` function in `includes/auth.php` checks whether the authenticated user's role is included in the permitted roles. If the role is not authorized, the function returns an HTTP 403 response and stops execution.
+
+I verified that `request-form.php` calls the following functions before displaying any HTML:
+
+```php
+$user = requireLogin($pdo);
+requireRole($user, ['Student']);
+```
+
+This ensures that only authenticated users with the Student role can access the tutoring request form. These checks are performed on the server rather than relying on hidden navigation links or client-side restrictions. This demonstrates the difference between authentication, which verifies a user's identity, and authorization, which determines what the user is permitted to access.
+
+Verification method: Manual inspection of both generated PHP files in GitHub. Runtime testing will be conducted in later parts of the lab.
 
 ## Parts 2–10
 
