@@ -1,0 +1,2 @@
+<?php
+require_once __DIR__.'/../includes/auth.php';$pdo=openDatabase();$user=requireLogin($pdo);pageStart('My Profile');foreach(['full_name'=>'Name','email'=>'Email','role'=>'Role','status'=>'Status'] as $k=>$label)echo '<p><strong>'.$label.':</strong> '.escapeHtml($user[$k]).'</p>';echo '<a class="btn btn-primary" href="edit-profile.php">Edit Profile</a> <a class="btn btn-secondary" href="change-password.php">Change Password</a>';pageEnd();
