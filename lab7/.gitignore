@@ -1,0 +1,12 @@
+# Generated SQLite database files
+/database/*.db
+/database/*.db-journal
+/database/*.db-wal
+/database/*.db-shm
+
+# Local environment configuration
+.env
+
+# Operating system files
+.DS_Store
+Thumbs.db
